@@ -1,0 +1,10 @@
+path = "~/Dropbox/phone2chrome/pages"
+
+destEmail = "your_kindle_email@kindle.com"
+srcEmail = "an_allowed_email@example.com"
+
+server = "smtp.gmail.com"
+port = 587
+
+username = None # set to a string to login 
+password = None # set to a string to login
