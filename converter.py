@@ -103,7 +103,11 @@ def parsePages():
 
 	raw = open(path).read()
 	raw = raw[raw.find("{"):raw.rfind("}")+1]
-	pages = json.loads(raw)["pages"]
+	try:
+		pages = json.loads(raw)["pages"]
+	except ValueError:
+		print "No valid 'pages' available yet"
+		return
 
 	for page in sorted(pages, key=itemgetter("date")):
 		print page
@@ -133,3 +137,23 @@ if __name__ == "__main__":
 	path = os.path.join(path, "pages")
 
 	parsePages()
+
+	print "waiting for change..."
+
+	import pyinotify
+
+	wm = pyinotify.WatchManager()  # Watch Manager
+	mask = pyinotify.IN_MODIFY | pyinotify.IN_CREATE  # watched events
+
+	class EventHandler(pyinotify.ProcessEvent):
+		def process_IN_CREATE(self, event):
+			parsePages()
+
+		def process_IN_MODIFY(self, event):
+			parsePages()
+
+	handler = EventHandler()
+	notifier = pyinotify.Notifier(wm, handler)
+	wdd = wm.add_watch(path, mask, rec=True)
+
+	notifier.loop()
