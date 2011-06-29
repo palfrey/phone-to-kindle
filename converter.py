@@ -3,25 +3,10 @@ import json
 import os
 from operator import itemgetter
 from urlparse import urljoin
-from lxml import etree
 from BeautifulSoup import BeautifulSoup
 
 import email.mime, smtplib, email.mime.application
 from settings import *
-
-path = os.path.expanduser(path)
-complete = os.path.join(path, "complete")
-path = os.path.join(path, "pages")
-cache = urlgrab.Cache()
-
-try:
-	done = json.loads(open(complete).read())
-except (IOError, EOFError):
-	done = []
-
-raw = open(path).read()
-raw = raw[raw.find("{"):raw.rfind("}")+1]
-pages = json.loads(raw)["pages"]
 
 def rewriter(attr, tags, outPath, base):
 	for item in tags:
@@ -42,14 +27,7 @@ def rewriter(attr, tags, outPath, base):
 		except urlgrab.URLTimeoutError,e:
 			continue # ignore
 
-for page in sorted(pages, key=itemgetter("date")):
-	print page
-	url = page["url"]
-	url = url[url.find("http"):] # fix Tweet shares which don't necessarily start with the url...
-	
-	if url in done:
-		continue
-
+def getPage(url):
 	data = cache.get(url, max_age=-1)
 	hash = data.hash()
 	outPath = os.path.abspath(os.path.join(cache.cache, hash))
@@ -66,7 +44,6 @@ for page in sorted(pages, key=itemgetter("date")):
 			while raw.find("<script")!=-1:
 				raw = raw[:raw.find("<script")]+raw[raw.find("</script>")+9:]
 
-			#soup = etree.HTML(raw)
 			soup = BeautifulSoup(raw)
 			rewriter("src", soup.findAll("img"), outPath, data.url)
 			rewriter("href", soup.findAll("link", rel="stylesheet"), outPath, data.url)
@@ -108,3 +85,27 @@ for page in sorted(pages, key=itemgetter("date")):
 	done.append(url)
 	json.dump(done, open(complete, "wb"))
 
+if __name__ == "__main__":
+	path = os.path.expanduser(path)
+	complete = os.path.join(path, "complete")
+	path = os.path.join(path, "pages")
+	cache = urlgrab.Cache()
+
+	try:
+		done = json.loads(open(complete).read())
+	except (IOError, EOFError):
+		done = []
+
+	raw = open(path).read()
+	raw = raw[raw.find("{"):raw.rfind("}")+1]
+	pages = json.loads(raw)["pages"]
+
+	for page in sorted(pages, key=itemgetter("date")):
+		print page
+		url = page["url"]
+		url = url[url.find("http"):] # fix Tweet shares which don't necessarily start with the url...
+
+		if url in done:
+			continue
+
+		getPage(url)
