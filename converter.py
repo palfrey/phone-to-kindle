@@ -82,14 +82,19 @@ def getPage(url):
 	s.sendmail(srcEmail, destEmail, msg.as_string())
 	s.close()
 
-	done.append(url)
-	json.dump(done, open(complete, "wb"))
-
 if __name__ == "__main__":
+	import sys
+
+	cache = urlgrab.Cache()
+
+	if len(sys.argv)>1:
+		for url in sys.argv[1:]:
+			getPage(url)
+		sys.exit(0)
+
 	path = os.path.expanduser(path)
 	complete = os.path.join(path, "complete")
 	path = os.path.join(path, "pages")
-	cache = urlgrab.Cache()
 
 	try:
 		done = json.loads(open(complete).read())
@@ -109,3 +114,7 @@ if __name__ == "__main__":
 			continue
 
 		getPage(url)
+
+		done.append(url)
+		json.dump(done, open(complete, "wb"))
+
