@@ -1,4 +1,4 @@
-path = "~/Dropbox/phone2chrome/pages"
+path = "~/Dropbox/phone2chrome/"
 
 destEmail = "your_kindle_email@kindle.com"
 srcEmail = "an_allowed_email@example.com"
