@@ -4,6 +4,8 @@ import os
 from operator import itemgetter
 from urlparse import urljoin
 from BeautifulSoup import BeautifulSoup
+from urllib import quote_plus
+from shutil import move
 
 import email.mime, smtplib, email.mime.application
 from settings import *
@@ -27,16 +29,16 @@ def rewriter(attr, tags, outPath, base):
 		except urlgrab.URLTimeoutError,e:
 			continue # ignore
 
-def getPage(url):
+def generateMobi(url):
 	data = cache.get(url, max_age=-1)
 	hash = data.hash()
 	outPath = os.path.abspath(os.path.join(cache.cache, hash))
+	print outPath
+	if not os.path.exists(outPath):
+		os.mkdir(outPath)
 	mobi = os.path.join(outPath, "%s.mobi"%hash)
 	print mobi
 	if not os.path.exists(mobi):
-		print outPath
-		if not os.path.exists(outPath):
-			os.mkdir(outPath)
 		raw = data.read()
 		if data.getmime() == ["text", "html"]:
 			
@@ -63,8 +65,19 @@ def getPage(url):
 		print "converting"
 		ret = os.system(cmd)
 		os.chdir(current)
+		return (ret, mobi)
+	else:
+		return (0, mobi)
+
+def getPage(url):
+	(ret, mobi) = generateMobi(url)
+	if ret != 0: # try alternate url
+		alturl = "http://www.skweezer.com/s.aspx?q=%s"%quote_plus(url)
+		print alturl
+		(ret, newmobi) = generateMobi(alturl)
 		assert ret == 0, ret
-		assert os.path.exists(mobi), mobi
+		move(newmobi, mobi)
+	assert os.path.exists(mobi), mobi
 
 	msg = email.mime.Multipart.MIMEMultipart()
 	msg["From"] = srcEmail
@@ -82,20 +95,7 @@ def getPage(url):
 	s.sendmail(srcEmail, destEmail, msg.as_string())
 	s.close()
 
-if __name__ == "__main__":
-	import sys
-
-	cache = urlgrab.Cache()
-
-	if len(sys.argv)>1:
-		for url in sys.argv[1:]:
-			getPage(url)
-		sys.exit(0)
-
-	path = os.path.expanduser(path)
-	complete = os.path.join(path, "complete")
-	path = os.path.join(path, "pages")
-
+def parsePages():
 	try:
 		done = json.loads(open(complete).read())
 	except (IOError, EOFError):
@@ -118,3 +118,18 @@ if __name__ == "__main__":
 		done.append(url)
 		json.dump(done, open(complete, "wb"))
 
+if __name__ == "__main__":
+	import sys
+
+	cache = urlgrab.Cache()
+
+	if len(sys.argv)>1:
+		for url in sys.argv[1:]:
+			getPage(url)
+		sys.exit(0)
+
+	path = os.path.expanduser(path)
+	complete = os.path.join(path, "complete")
+	path = os.path.join(path, "pages")
+
+	parsePages()
