@@ -43,8 +43,8 @@ def generateMobi(url):
 		if data.getmime() == ["text", "html"]:
 			
 			# script tags make beautiful soup unhappy
-			while raw.find("<script")!=-1:
-				raw = raw[:raw.find("<script")]+raw[raw.find("</script>")+9:]
+			while raw.lower().find("<script")!=-1:
+				raw = raw[:raw.lower().find("<script")]+raw[raw.lower().find("</script>")+9:]
 
 			soup = BeautifulSoup(raw)
 			rewriter("src", soup.findAll("img"), outPath, data.url)
