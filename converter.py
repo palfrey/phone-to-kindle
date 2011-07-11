@@ -40,8 +40,7 @@ def generateMobi(url):
 	print mobi
 	if not os.path.exists(mobi):
 		raw = data.read()
-		if data.getmime() == ["text", "html"]:
-			
+		if data.getmime() in (["text", "html"], ["application", "xhtml+xml"]):
 			# script tags make beautiful soup unhappy
 			while raw.lower().find("<script")!=-1:
 				raw = raw[:raw.lower().find("<script")]+raw[raw.lower().find("</script>")+9:]
