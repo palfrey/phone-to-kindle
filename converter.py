@@ -103,15 +103,15 @@ def parsePages():
 	except (IOError, EOFError):
 		done = []
 
-	raw = open(path).read()
+	raw = open(pages).read()
 	raw = raw[raw.find("{"):raw.rfind("}")+1]
 	try:
-		pages = json.loads(raw)["pages"]
+		data = json.loads(raw)["pages"]
 	except ValueError:
 		print "No valid 'pages' available yet"
 		return
 
-	for page in sorted(pages, key=itemgetter("date")):
+	for page in sorted(data, key=itemgetter("date")):
 		print page
 		url = page["url"]
 		url = url[url.find("http"):] # fix Tweet shares which don't necessarily start with the url...
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
 	path = os.path.expanduser(path)
 	complete = os.path.join(path, "complete")
-	path = os.path.join(path, "pages")
+	pages = os.path.join(path, "pages")
 
 	parsePages()
 
@@ -145,13 +145,16 @@ if __name__ == "__main__":
 	import pyinotify
 
 	wm = pyinotify.WatchManager()  # Watch Manager
-	mask = pyinotify.IN_MODIFY | pyinotify.IN_CREATE  # watched events
+	mask = pyinotify.ALL_EVENTS
 
 	class EventHandler(pyinotify.ProcessEvent):
 		def process_IN_CREATE(self, event):
 			parsePages()
 
 		def process_IN_MODIFY(self, event):
+			parsePages()
+
+		def process_IN_MOVED_TO(self, event):
 			parsePages()
 
 	handler = EventHandler()
