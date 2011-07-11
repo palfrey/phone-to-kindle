@@ -45,7 +45,10 @@ def generateMobi(url):
 			while raw.lower().find("<script")!=-1:
 				raw = raw[:raw.lower().find("<script")]+raw[raw.lower().find("</script>")+9:]
 
-			soup = BeautifulSoup(raw)
+			try:
+				soup = BeautifulSoup(raw)
+			except:
+				return (-1, mobi)
 			rewriter("src", soup.findAll("img"), outPath, data.url)
 			rewriter("href", soup.findAll("link", rel="stylesheet"), outPath, data.url)
 			open(os.path.join(outPath, "index.html"), "wb").write(str(soup))
